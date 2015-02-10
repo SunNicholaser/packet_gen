@@ -1,17 +1,20 @@
+import time
+
 try:
     import scapy.all as scapy
 except:
     import scapy as scapy
 
-def simple_tcp_packet(pktlen=100, 
-                      dl_dst='00:01:02:03:04:05',
-                      dl_src='00:06:07:08:09:0a',
+MINSIZE = 0
+def simple_tcp_packet(pktlen=400, 
+                      dl_dst='48:d2:24:0f:60:52',
+                      dl_src='00:1b:21:02:d1:57',
                       dl_vlan_enable=False,
                       dl_vlan=0,
                       dl_vlan_pcp=0,
                       dl_vlan_cfi=0,
-                      ip_src='192.168.0.1',
-                      ip_dst='192.168.0.2',
+                      ip_src='1.1.1.5',
+                      ip_dst='1.1.1.125',
                       ip_tos=0,
                       tcp_sport=1234,
                       tcp_dport=80,
@@ -67,17 +70,17 @@ def simple_tcp_packet(pktlen=100,
 
 
 def simple_udp_packet(pktlen=100,
-                      dl_dst='00:01:02:03:04:05',
-                      dl_src='00:06:07:08:09:0a',
+                      dl_dst='48:d2:24:0f:60:52',
+                      dl_src='00:1b:21:02:d1:57',
                       dl_vlan_enable=False,
                       dl_vlan=0,
                       dl_vlan_pcp=0,
                       dl_vlan_cfi=0,
-                      ip_src='192.168.0.1',
-                      ip_dst='192.168.0.2',
+                      ip_src='1.1.1.5',
+                      ip_dst='1.1.1.125',
                       ip_tos=0,
                       udp_sport=4567,
-                      udp_dport=4657,
+                      udp_dport=9,
                       ip_ihl=None,
                       ip_options=False
                       ):
@@ -132,8 +135,8 @@ def simple_udp_packet(pktlen=100,
 
 
 def simple_eth_packet(pktlen=60,
-                      dl_dst='00:01:02:03:04:05',
-                      dl_src='01:80:c2:00:00:00',
+                      dl_src='00:01:02:03:04:05',
+                      dl_dst='01:80:c2:00:00:0e',
                       dl_type=0x88cc):
 
     if MINSIZE > pktlen:
@@ -146,5 +149,27 @@ def simple_eth_packet(pktlen=60,
 
 
 if __name__ == "__main__":
-    packet = simple_udp_packet()
-    scapy.sendp(packet, iface = "eth0")
+	import time
+	from optparse import OptionParser
+
+	parser = OptionParser()
+	parser.add_option('-n','--npacket', dest = 'num_pack',type=int, help = 'number of packet')
+	parser.add_option('-i', '--invalid', action="store_true",dest = 'invalid_pkt', default=False, help = 'invalid pkt')
+	(options, args) = parser.parse_args()
+	print type(options)
+	num_pack = options.num_pack
+	invalid_pkt = options.invalid_pkt
+
+	for i in range(0,num_pack):
+		#packet = simple_eth_packet()
+		packet = simple_tcp_packet(pktlen=100)
+    		#packet = simple_udp_packet()
+		scapy.sendp(packet, iface = "eth1",count=1)
+		#time.sleep(10)
+		
+		if invalid_pkt:
+			invalid_packet = simple_tcp_packet(ip_src='1.1.1.6', ip_dst='1.1.1.123', pktlen=100)
+			print 'sending invalid packet'
+			scapy.sendp(invalid_packet, iface='eth1')
+
+
